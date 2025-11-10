@@ -1,55 +1,124 @@
 # Face Detection using Haar Cascades with OpenCV and Matplotlib
 
-## Aim
+## Overview
 
-To write a Python program using OpenCV to perform the following image manipulations:  
-i) Extract ROI from an image.  
-ii) Perform face detection using Haar Cascades in static images.  
-iii) Perform eye detection in images.  
-iv) Perform face detection with label in real-time video from webcam.
+This project demonstrates face and eye detection using OpenCV's Haar Cascade Classifiers in both static images and real-time video. The implementation includes support for:
+- Face detection in single-person and group photos
+- Eye detection capabilities
+- Real-time webcam face detection
+- Different image resolutions testing
 
-## Software Required
+## Prerequisites
 
-- Anaconda - Python 3.7 or above  
-- OpenCV library (`opencv-python`)  
-- Matplotlib library (`matplotlib`)  
-- Jupyter Notebook or any Python IDE (e.g., VS Code, PyCharm)
+- Python 3.7 or above
+- OpenCV (opencv-python)
+- Matplotlib (matplotlib)
+- Jupyter Notebook
 
-## Algorithm
+Required files:
+- haarcascade_frontalface_default.xml
+- haarcascade_eye.xml
 
-### I) Load and Display Images
+## Implementation Details
 
-- Step 1: Import necessary packages: `numpy`, `cv2`, `matplotlib.pyplot`  
-- Step 2: Load grayscale images using `cv2.imread()` with flag `0`  
-- Step 3: Display images using `plt.imshow()` with `cmap='gray'`
+### I) Image Loading and Preprocessing
+```
+python
+import cv2
+import matplotlib.pyplot as plt
 
-### II) Load Haar Cascade Classifiers
 
-- Step 1: Load face and eye cascade XML files 
-### III) Perform Face Detection in Images
+# Load images
+img1 = cv2.imread('image_01.png', 0)  # Without glasses
+img2 = cv2.imread('image_02.png', 0)  # With glasses
+img3 = cv2.imread('image_03.png', 0)  # Group photo
 
-- Step 1: Define a function `detect_face()` that copies the input image  
-- Step 2: Use `face_cascade.detectMultiScale()` to detect faces  
-- Step 3: Draw white rectangles around detected faces with thickness 10  
-- Step 4: Return the processed image with rectangles  
+# Resize for better detection
+img1_resized = cv2.resize(img1, (1000,1000))
+img2_resized = cv2.resize(img2, (1000,1000))
+img3_resized = cv2.resize(img3, (1000,1000))
+```
 
-### IV) Perform Eye Detection in Images
+### II) Face Detection Implementation
+```
+The project uses two main detection functions:
 
-- Step 1: Define a function `detect_eyes()` that copies the input image  
-- Step 2: Use `eye_cascade.detectMultiScale()` to detect eyes  
-- Step 3: Draw white rectangles around detected eyes with thickness 10  
-- Step 4: Return the processed image with rectangles  
+1. Face Detection:
+python
+face_cascade = cv2.CascadeClassifier('./haarcascade_frontalface_default.xml')
 
-### V) Display Detection Results on Images
+def detect_face(img):
+    face_img = img.copy()
+    face_rects = face_cascade.detectMultiScale(face_img)
+    for (x,y,w,h) in face_rects:
+        cv2.rectangle(face_img, (x,y), (x+w, y+h), (127,0,255), 10)
+    return face_img
 
-- Step 1: Call `detect_face()` or `detect_eyes()` on loaded images  
-- Step 2: Use `plt.imshow()` with `cmap='gray'` to display images with detected regions highlighted  
 
-### VI) Perform Face Detection on Real-Time Webcam Video
+2. Eye Detection:
+python
+eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
 
-- Step 1: Capture video from webcam using `cv2.VideoCapture(0)`  
-- Step 2: Loop to continuously read frames from webcam  
-- Step 3: Apply `detect_face()` function on each frame  
-- Step 4: Display the video frame with rectangles around detected faces  
-- Step 5: Exit loop and close windows when ESC key (key code 27) is pressed  
-- Step 6: Release video capture and destroy all OpenCV windows  
+def detect_eye(img):
+    face_img = img.copy()
+    face_rects = eye_cascade.detectMultiScale(face_img)
+    for (x,y,w,h) in face_rects:
+        cv2.rectangle(face_img, (x,y), (x+w, y+h), (0,255,0), 2)
+    return face_img
+```
+
+### III) Real-time Webcam Detection
+```
+python
+cap = cv2.VideoCapture(0)
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        print("Error: Can't receive frame")
+        break
+        
+    result = detect_face(frame)
+    cv2.imshow("Face Detection Through Webcam", result)
+    
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+```
+
+## Performance Notes
+
+- The program includes testing of different image resolutions:
+  - Original size
+  - 1000x1000 resize
+  - 2000x2000 resize
+- Larger resolutions may provide better detection but require more processing power
+- Real-time detection is optimized for webcam feed
+
+## Usage Tips
+
+1. For static images:
+   - Use appropriate image sizes (1000x1000 recommended)
+   - Test with both color and grayscale images
+   - Ensure good lighting and clear faces
+
+2. For webcam detection:
+   - Ensure proper lighting
+   - Press 'q' to exit the webcam feed
+   - Keep face centered in frame
+
+## Limitations and Future Improvements
+
+- Detection accuracy may vary with:
+  - Lighting conditions
+  - Face angles
+  - Presence of glasses/accessories
+  - Image quality and resolution
+
+Potential improvements:
+- Add face recognition capabilities
+- Implement multiple cascade classifiers
+- Add support for profile face detection
+- Optimize detection parameters
